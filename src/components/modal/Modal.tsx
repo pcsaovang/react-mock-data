@@ -1,4 +1,10 @@
-import { FC, PropsWithChildren, ReactElement, useEffect } from "react";
+import {
+  FC,
+  PropsWithChildren,
+  ReactElement,
+  useCallback,
+  useEffect,
+} from "react";
 import styled from "styled-components";
 import { ModalId } from "../../constants/modal";
 import { Portal } from "../portal/Portal";
@@ -10,17 +16,26 @@ type Props = {
   title: string | ReactElement;
   modalId: ModalId;
   contentLoading?: boolean;
+  parentEl?: HTMLElement;
 };
 
 export const Modal: FC<PropsWithChildren<Props>> = ({
   title,
   modalId,
   contentLoading,
+  parentEl,
   children,
 }) => {
   const { show, hideModal } = useModal();
 
-  console.log(show)
+  const keyHandler = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.code === "Escape") {
+        hideModal();
+      }
+    },
+    [hideModal]
+  );
 
   useEffect(() => {
     if (show !== modalId) {
@@ -34,12 +49,20 @@ export const Modal: FC<PropsWithChildren<Props>> = ({
     };
   }, [modalId, show]);
 
+  useEffect(() => {
+    window.addEventListener("keyup", keyHandler);
+
+    return () => {
+      window.removeEventListener("keyup", keyHandler);
+    };
+  }, [keyHandler]);
+
   if (show !== modalId) {
     return null;
   }
 
   return (
-    <Portal>
+    <Portal parent={parentEl}>
       <OverLay tabIndex={-1} onClick={hideModal} />
       <Inner>
         <Header>
